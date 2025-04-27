@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Rate Prediction - Heart Doctor AI</title>
+    <style>
+        :root {
+            --background: #30c4e0;
+            --foreground: #d4af37;
+            --card: #ffffff;
+            --card-foreground: #d4af37;
+            --primary: #0077b6;
+            --secondary: #90e0ef;
+            --muted: #f1f5f9;
+            --muted-foreground: #64748b;
+            --destructive: #ff4d4d;
+            --border: #e2e8f0;
+            --input: #e2e8f0;
+            --radius: 0.5rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--foreground);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.75rem 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-logo {
+            display: flex;
+            align-items: center;
+            color: var(--foreground);
+            font-weight: 700;
+            font-size: 1.25rem;
+            text-decoration: none;
+        }
+
+        .navbar-logo-icon {
+            width: 1.5rem;
+            height: 1.5rem;
+            margin-right: 0.5rem;
+            fill: var(--foreground);
+        }
+
+        .navbar-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .navbar-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-link.active {
+            background-color: var(--foreground);
+            color: var(--background);
+        }
+
+        .navbar-link-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 0.5rem;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            width: 100%;
+            flex: 1;
+        }
+
+        .content {
+            max-width: 48rem;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: var(--foreground);
+        }
+
+        .subtitle {
+            margin-top: 0.5rem;
+            color: white;
+        }
+
+        .card {
+            background-color: var(--card);
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.5rem 1.5rem 0;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--foreground);
+            display: flex;
+            align-items: center;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .form-item {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--foreground);
+        }
+
+        .form-description {
+            font-size: 0.875rem;
+            color: var(--muted-foreground);
+            margin-top: 0.25rem;
+        }
+
+        .form-message {
+            font-size: 0.875rem;
+            color: var(--destructive);
+            margin-top: 0.25rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--input);
+            border-radius: var(--radius);
+            background-color: white;
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0, 119, 182, 0.2);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .radio-input {
+            margin-right: 0.5rem;
+        }
+
+        .radio-label {
+            font-size: 0.875rem;
+            color: #333;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius);
+            font-weight: 500;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s, opacity 0.2s;
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .button:hover {
+            background-color: rgba(0, 119, 182, 0.9);
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .button-icon {
+            margin-right: 0.5rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        .loader-icon {
+            width: 1rem;
+            height: 1rem;
+            margin-right: 0.5rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .alert {
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .alert-destructive {
+            background-color: rgba(255, 77, 77, 0.1);
+            border: 1px solid var(--destructive);
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--destructive);
+        }
+
+        .alert-description {
+            color: var(--destructive);
+            font-size: 0.875rem;
+        }
+
+        .gradient-bar {
+            height: 0.5rem;
+            background: linear-gradient(to right, #00b4d8, #90e0ef);
+        }
+
+        .result-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .result-value.high {
+            color: var(--destructive);
+        }
+
+        .result-label {
+            color: var(--muted-foreground);
+            margin-top: 0.25rem;
+        }
+
+        .risk-warning {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background-color: rgba(255, 77, 77, 0.1);
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 77, 77, 0.2);
+        }
+
+        .risk-warning-title {
+            color: var(--destructive);
+            font-weight: 500;
+        }
+
+        .risk-warning-description {
+            color: rgba(255, 77, 77, 0.8);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .visualization {
+            margin-top: 1.5rem;
+        }
+
+        .bar-chart {
+            height: 6rem;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .bar {
+            width: 1.5rem;
+            border-top-left-radius: 0.25rem;
+            border-top-right-radius: 0.25rem;
+        }
+
+        .bar:nth-child(odd) {
+            background-color: #00b4d8;
+        }
+
+        .bar:nth-child(even) {
+            background-color: #90e0ef;
+        }
+
+        .chart-baseline {
+            height: 0.25rem;
+            background-color: var(--muted);
+            margin-top: 0.25rem;
+        }
+
+        .chart-label {
+            font-size: 0.75rem;
+            color: var(--muted-foreground);
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Heart icon */
+        .heart-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 0.5rem;
+            fill: none;
+            stroke: var(--primary);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="predict.html" class="navbar-logo">
+                <svg class="navbar-logo-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19.5 13.5L12 21l-7.5-7.5c-1.665-1.665-2.159-4.136-1.252-6.292 0.907-2.156 3.02-3.552 5.348-3.552 1.5 0 2.936 0.631 4.004 1.752 0.9-0.95 2.169-1.752 3.796-1.752 2.328 0 4.441 1.396 5.348 3.552 0.907 2.156 0.413 4.627-1.252 6.292z"></path>
+                </svg>
+                <span class="navbar-logo-text">Heart Doctor AI</span>
+            </a>
+            <div class="navbar-links">
+                <a href="predict.html" class="navbar-link active">
+                    <svg class="navbar-link-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span class="navbar-link-text">Home</span>
+                </a>
+                <a href="chat (1).html" class="navbar-link">
+                    <svg class="navbar-link-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span class="navbar-link-text">Chat</span>
+                </a>
+                <a href="call.html" class="navbar-link">
+                    <svg class="navbar-link-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                    </svg>
+                    <span class="navbar-link-text">Call</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="content">
+            <div class="header">
+                <h1 class="title">Heart Rate Prediction</h1>
+                <p class="subtitle">Enter your health metrics to predict your heart rate</p>
+            </div>
+
+            <div class="card">
+                <div class="card-content">
+                    <form id="predictionForm">
+                        <div class="form-grid">
+                            <div class="form-item">
+                                <label class="form-label" for="age">Age</label>
+                                <input class="form-input" type="number" id="age" name="age" placeholder="35" value="35">
+                                <div class="form-message" id="age-error"></div>
+                            </div>
+
+                            <div class="form-item">
+                                <label class="form-label" for="gender">Gender</label>
+                                <div class="radio-group">
+                                    <div class="radio-item">
+                                        <input class="radio-input" type="radio" id="gender-male" name="gender" value="1" checked>
+                                        <label class="radio-label" for="gender-male">Male (1)</label>
+                                    </div>
+                                    <div class="radio-item">
+                                        <input class="radio-input" type="radio" id="gender-female" name="gender" value="0">
+                                        <label class="radio-label" for="gender-female">Female (0)</label>
+                                    </div>
+                                </div>
+                                <div class="form-description">0 for female, 1 for male</div>
+                                <div class="form-message" id="gender-error"></div>
+                            </div>
+
+                            <div class="form-item">
+                                <label class="form-label" for="impulse">Impulse (bpm)</label>
+                                <input class="form-input" type="number" id="impulse" name="impulse" placeholder="75" value="75">
+                                <div class="form-message" id="impulse-error"></div>
+                            </div>
+
+                            <div class="form-item">
+                                <label class="form-label" for="pressureHigh">Systolic Blood Pressure (mmHg)</label>
+                                <input class="form-input" type="number" id="pressureHigh" name="pressureHigh" placeholder="120" value="120">
+                                <div class="form-message" id="pressureHigh-error"></div>
+                            </div>
+
+                            <div class="form-item">
+                                <label class="form-label" for="pressureLow">Diastolic Blood Pressure (mmHg)</label>
+                                <input class="form-input" type="number" id="pressureLow" name="pressureLow" placeholder="80" value="80">
+                                <div class="form-message" id="pressureLow-error"></div>
+                            </div>
+
+                            <div class="form-item">
+                                <label class="form-label" for="glucose">Glucose (mg/dL)</label>
+                                <input class="form-input" type="number" id="glucose" name="glucose" placeholder="100" value="100">
+                                <div class="form-message" id="glucose-error"></div>
+                            </div>
+
+                            <div class="form-item">
+                                <label class="form-label" for="kcm">KCM (mmol/L)</label>
+                                <input class="form-input" type="number" id="kcm" name="kcm" placeholder="4.5" value="4.5" step="0.1">
+                                <div class="form-description">Potassium, Calcium, Magnesium levels</div>
+                                <div class="form-message" id="kcm-error"></div>
+                            </div>
+
+                            <div class="form-item">
+                                <label class="form-label" for="troponin">Troponin (ng/mL)</label>
+                                <input class="form-input" type="number" id="troponin" name="troponin" placeholder="0.01" value="0.01" step="0.01">
+                                <div class="form-message" id="troponin-error"></div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="button" id="predictButton">
+                            <svg class="button-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19.5 13.5L12 21l-7.5-7.5c-1.665-1.665-2.159-4.136-1.252-6.292 0.907-2.156 3.02-3.552 5.348-3.552 1.5 0 2.936 0.631 4.004 1.752 0.9-0.95 2.169-1.752 3.796-1.752 2.328 0 4.441 1.396 5.348 3.552 0.907 2.156 0.413 4.627-1.252 6.292z"></path>
+                            </svg>
+                            Predict Heart Rate
+                        </button>
+                        
+                        <div class="hidden" id="loadingIndicator">
+                            <svg class="loader-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" opacity=".5"/>
+                                <path d="M20 12h2A10 10 0 0 0 12 2v2a8 8 0 0 1 8 8z"/>
+                            </svg>
+                            Predicting...
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="alert alert-destructive hidden" id="errorAlert">
+                <div class="alert-title">Error</div>
+                <div class="alert-description" id="errorMessage"></div>
+            </div>
+
+            <div class="card hidden" id="resultCard">
+                <div class="gradient-bar"></div>
+                <div class="card-header">
+                    <div class="card-title">
+                        <svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19.5 13.5L12 21l-7.5-7.5c-1.665-1.665-2.159-4.136-1.252-6.292 0.907-2.156 3.02-3.552 5.348-3.552 1.5 0 2.936 0.631 4.004 1.752 0.9-0.95 2.169-1.752 3.796-1.752 2.328 0 4.441 1.396 5.348 3.552 0.907 2.156 0.413 4.627-1.252 6.292z"></path>
+                        </svg>
+                        Prediction Result
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="text-center">
+                        <p class="result-value" id="predictionValue">0.0</p>
+                        <p class="result-label">Predicted Heart Rate (BPM)</p>
+
+                        <div class="risk-warning hidden" id="riskWarning">
+                            <p class="risk-warning-title">Elevated heart rate detected</p>
+                            <p class="risk-warning-description">Consider consulting with a healthcare professional</p>
+                        </div>
+
+                        <div class="visualization">
+                            
+                            <div class="chart-baseline"></div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('predictionForm');
+            const predictButton = document.getElementById('predictButton');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const errorAlert = document.getElementById('errorAlert');
+            const errorMessage = document.getElementById('errorMessage');
+            const resultCard = document.getElementById('resultCard');
+            const predictionValue = document.getElementById('predictionValue');
+            const riskWarning = document.getElementById('riskWarning');
+            const barChart = document.getElementById('barChart');
+
+            // Form validation
+            function validateForm() {
+                let isValid = true;
+                const fields = [
+                    { id: 'age', min: 1, max: 120, required: true, type: 'int' },
+                    { id: 'gender', required: true },
+                    { id: 'impulse', min: 1, max: 250, required: true, type: 'int' },
+                    { id: 'pressureHigh', min: 1, max: 300, required: true, type: 'int' },
+                    { id: 'pressureLow', min: 1, max: 200, required: true, type: 'int' },
+                    { id: 'glucose', min: 1, max: 500, required: true, type: 'float' },
+                    { id: 'kcm', min: 0.1, required: true, type: 'float' },
+                    { id: 'troponin', min: 0.01, required: true, type: 'float' }
+                ];
+
+                // Clear previous errors
+                fields.forEach(field => {
+                    document.getElementById(`${field.id}-error`).textContent = '';
+                });
+
+                fields.forEach(field => {
+                    let value;
+                    
+                    if (field.id === 'gender') {
+                        const maleRadio = document.getElementById('gender-male');
+                        const femaleRadio = document.getElementById('gender-female');
+                        value = maleRadio.checked ? '1' : femaleRadio.checked ? '0' : '';
+                    } else {
+                        value = document.getElementById(field.id).value.trim();
+                    }
+
+                    if (field.required && !value) {
+                        document.getElementById(`${field.id}-error`).textContent = 'This field is required';
+                        isValid = false;
+                        return;
+                    }
+
+                    if (field.type === 'int' || field.type === 'float') {
+                        const numValue = parseFloat(value);
+                        
+                        if (isNaN(numValue)) {
+                            document.getElementById(`${field.id}-error`).textContent = 'Must be a number';
+                            isValid = false;
+                            return;
+                        }
+
+                        if (field.type === 'int' && !Number.isInteger(numValue)) {
+                            document.getElementById(`${field.id}-error`).textContent = 'Must be an integer';
+                            isValid = false;
+                            return;
+                        }
+
+                        if (field.min !== undefined && numValue < field.min) {
+                            document.getElementById(`${field.id}-error`).textContent = `Must be at least ${field.min}`;
+                            isValid = false;
+                            return;
+                        }
+
+                        if (field.max !== undefined && numValue > field.max) {
+                            document.getElementById(`${field.id}-error`).textContent = `Must be at most ${field.max}`;
+                            isValid = false;
+                            return;
+                        }
+                    }
+                });
+
+                return isValid;
+            }
+
+            // Generate bar chart
+            function generateBarChart(heartRate) {
+                barChart.innerHTML = '';
+                
+                for (let i = 0; i < 8; i++) {
+                    // Create a pattern based on heart rate
+                    const baseHeight = 40;
+                    const variableHeight = Math.sin((i / 8) * Math.PI * 2) * 20;
+                    const heartRateFactor = (heartRate / 100) * 20;
+                    const height = baseHeight + variableHeight + heartRateFactor;
+                    
+                    const bar = document.createElement('div');
+                    bar.className = 'bar';
+                    bar.style.height = `${height}%`;
+                    barChart.appendChild(bar);
+                }
+            }
+
+            // Form submission
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (!validateForm()) {
+                    return;
+                }
+                
+                // Show loading state
+                predictButton.disabled = true;
+                predictButton.classList.add('hidden');
+                loadingIndicator.classList.remove('hidden');
+                errorAlert.classList.add('hidden');
+                resultCard.classList.add('hidden');
+                
+                // Get form data
+                const formData = {
+                    age: parseInt(document.getElementById('age').value),
+                    gender: parseInt(document.querySelector('input[name="gender"]:checked').value), // 0 for female, 1 for male
+                    impulse: parseInt(document.getElementById('impulse').value),
+                    pressureHigh: parseInt(document.getElementById('pressureHigh').value),
+                    pressureLow: parseInt(document.getElementById('pressureLow').value),
+                    glucose: parseFloat(document.getElementById('glucose').value),
+                    kcm: parseFloat(document.getElementById('kcm').value),
+                    troponin: parseFloat(document.getElementById('troponin').value),
+                    requestType: 'heartRatePrediction'
+                };
+                
+                try {
+                    // Send request to the Flask backend
+                    const response = await fetch('http://127.0.0.1:5000/predict', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Server responded with status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Check if the response contains the predicted heart rate
+                    if (data.predicted_heart_rate !== undefined) {
+                        // Update UI with prediction
+                        const prediction = data.predicted_heart_rate;
+                        predictionValue.textContent = typeof prediction === 'number' ? prediction.toFixed(1) : prediction;
+                        
+                        // Set risk level based on heart rate
+                        const isHighRisk = prediction > 100;
+                        if (isHighRisk) {
+                            predictionValue.classList.add('high');
+                            riskWarning.classList.remove('hidden');
+                        } else {
+                            predictionValue.classList.remove('high');
+                            riskWarning.classList.add('hidden');
+                        }
+                        
+                        // Generate visualization
+                        //generateBarChart(prediction);
+                        
+                        // Show result
+                        resultCard.classList.remove('hidden');
+                    } else if (data.error) {
+                        // Handle error from the server
+                        throw new Error(data.error);
+                    } else {
+                        // Handle unexpected response format
+                        throw new Error('Unexpected response format from server');
+                    }
+                } catch (err) {
+                    console.error('Error:', err);
+                    errorMessage.textContent = err.message || 'Failed to get prediction. Please try again.';
+                    errorAlert.classList.remove('hidden');
+                } finally {
+                    // Reset loading state
+                    predictButton.disabled = false;
+                    predictButton.classList.remove('hidden');
+                    loadingIndicator.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
