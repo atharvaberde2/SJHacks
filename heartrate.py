@@ -6,7 +6,7 @@ from flask_cors import CORS
 import os
 import pandas as pd
 
-model1 = joblib.load("C:/Users/athar/Downloads/heart_risk_model.pkl")
+model1 = joblib.load("heart_risk_model.pkl")
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
